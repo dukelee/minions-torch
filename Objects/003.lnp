@@ -1,0 +1,8 @@
+".\Objects\003.obj",
+".\Objects\global.obj",
+".\Objects\Common.obj",
+".\Objects\Delay.obj",
+".\Objects\STARTUP.obj" 
+TO ".\Objects\003" 
+PRINT(".\Listings\003.m51") RAMSIZE(256) 
+DISABLEWARNING (16) 

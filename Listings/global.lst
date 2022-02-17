@@ -1,0 +1,115 @@
+C51 COMPILER V9.60.0.0   GLOBAL                                                            02/16/2022 23:13:30 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE GLOBAL
+OBJECT MODULE PLACED IN .\Objects\global.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE global.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Include) DEFINE(FOSC_160000) 
+                    -DEBUG OBJECTEXTEND PRINT(.\Listings\global.lst) TABS(2) OBJECT(.\Objects\global.obj)
+
+line level    source
+
+   1          #include "N76E003.h"
+   2          #include "Common.h"
+   3          #include "Delay.h"
+   4          #include "SFR_Macro.h"
+   5          #include "Function_define.h"
+   6          #include "global.h"
+   7          #include "math.h"
+   8          
+   9          bit g_bTrigIn50us, g_bTrigInMs;
+  10          
+  11          void init()
+  12          {
+  13   1        //GPIO INITIAL
+  14   1        P10_PushPull_Mode;
+  15   1        P11_PushPull_Mode;
+  16   1        P12_PushPull_Mode;
+  17   1      
+  18   1        //TIMER 0 須控制在50us，因為有些信號只有300us而已
+  19   1        //set_M1_T0;
+  20   1        TIMER0_MODE2_ENABLE;
+  21   1        TH0=189;
+  22   1        set_ET0;                                    //enable Timer0 interrupt
+  23   1        set_EA;                                     //enable interrupts
+  24   1        set_TR0;                                    //Timer0 run
+  25   1        
+  26   1        //PWM Setup
+  27   1        PWM2_P10_OUTPUT_ENABLE;
+  28   1        PWM1_P11_OUTPUT_ENABLE;
+  29   1        PWM0_P12_OUTPUT_ENABLE;
+  30   1        PWM_IMDEPENDENT_MODE;
+  31   1        PWM_CLOCK_DIV_2;
+  32   1        PWMPH = HIBYTE(PWMP);
+  33   1        PWMPL = LOBYTE(PWMP);
+  34   1      /**********************************************************************
+  35   1        PWM frequency = Fpwm/((PWMPH,PWMPL) + 1) <Fpwm = Fsys/PWM_CLOCK_DIV> 
+  36   1                      = (16MHz/8)/(0x7CF + 1)
+  37   1                      = 1KHz (1ms)
+  38   1      ***********************************************************************/
+  39   1      
+  40   1        
+  41   1        set_LOAD;
+  42   1        set_PWMRUN;
+  43   1        
+  44   1      
+  45   1      }
+  46          /*********************************************************************************************************
+             -***
+  47          *    TIMER 0 interrupt subroutine
+  48          **********************************************************************************************************
+             -**/
+  49          void Timer0_ISR (void) interrupt 1              //interrupt address is 0x000B
+  50          {
+  51   1        static uint8_t o;
+  52   1        g_bTrigIn50us=1;
+C51 COMPILER V9.60.0.0   GLOBAL                                                            02/16/2022 23:13:30 PAGE 2   
+
+  53   1          o++;
+  54   1        if(o==20)
+  55   1        {
+  56   2          o=0;
+  57   2          g_bTrigInMs=1;
+  58   2        }
+  59   1      
+  60   1      }
+  61          void workingManager(void)
+  62          {
+  63   1        static float x0=0,x1=3.14*2/3,x2=3.14*4/3;
+  64   1        uint16_t PHASE0,PHASE1,PHASE2;
+  65   1        
+  66   1      
+  67   1        x0+=0.01;
+  68   1        x1+=0.01;
+  69   1        x2+=0.01;
+  70   1      
+  71   1        PHASE0=((sin(x0)+1)*PWMP)/2;
+  72   1        PHASE1=((sin(x1)+1)*PWMP)/2;
+  73   1        PHASE2=((sin(x2)+1)*PWMP)/2;
+  74   1        
+  75   1        PWM0H = HIBYTE(PHASE0);   
+  76   1        PWM0L = HIBYTE(PHASE0);
+  77   1        
+  78   1        PWM1H = HIBYTE(PHASE1);   
+  79   1        PWM1L = HIBYTE(PHASE1);
+  80   1        
+  81   1        PWM2H = HIBYTE(PHASE2);   
+  82   1        PWM2L = HIBYTE(PHASE2);
+  83   1        set_LOAD;
+  84   1        
+  85   1      
+  86   1      
+  87   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    327    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     13       4
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      2    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
